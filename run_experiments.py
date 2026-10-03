@@ -597,8 +597,40 @@ def step5_excel():
     print(f"Đã lưu thành công file Excel đầy đủ 7 sheets tại: {excel_path}")
 
 
+def ensure_dataset():
+    """Tự động kiểm tra và tải dataset nếu chưa có (rất tiện khi chạy trên Colab/Kaggle)."""
+    labels_dir = ROOT / "data" / "labels"
+    labels_dir.mkdir(parents=True, exist_ok=True)
+    images_dir = ROOT / "data" / "images"
+
+    base_url = "https://raw.githubusercontent.com/AlexOlsen/DeepWeeds/master/labels"
+    for name in ["labels", "train_subset0", "val_subset0", "test_subset0"]:
+        target = labels_dir / f"{name}.csv"
+        if not target.exists():
+            print(f"Đang tải {target.name} từ GitHub...")
+            import urllib.request
+            urllib.request.urlretrieve(f"{base_url}/{name}.csv", str(target))
+
+    if not images_dir.exists() or len(list(images_dir.glob("*.jpg"))) < 1000:
+        images_dir.mkdir(parents=True, exist_ok=True)
+        zip_path = ROOT / "data" / "images.zip"
+        if not zip_path.exists():
+            print("Đang tải images.zip từ Zenodo (~490MB, mất khoảng 30-60 giây)...")
+            import urllib.request
+            url = "https://zenodo.org/records/7939060/files/images.zip?download=1"
+            urllib.request.urlretrieve(url, str(zip_path))
+
+        print("Đang giải nén images.zip...")
+        import zipfile
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(ROOT / "data")
+        print("Đã giải nén xong ảnh vào data/images!")
+
+
 if __name__ == "__main__":
     t_start = time.time()
+    # 0. Đảm bảo dữ liệu đầy đủ
+    ensure_dataset()
     # 1. Backbones
     step1_backbones()
     # 2. Training recipes
