@@ -599,10 +599,13 @@ def step5_excel():
 
 def ensure_dataset():
     """Tự động kiểm tra và tải dataset nếu chưa có (rất tiện khi chạy trên Colab/Kaggle)."""
-    labels_dir = ROOT / "data" / "labels"
+    data_dir = ROOT / "data"
+    labels_dir = data_dir / "labels"
     labels_dir.mkdir(parents=True, exist_ok=True)
-    images_dir = ROOT / "data" / "images"
+    images_dir = data_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
 
+    # 1. Tải labels nếu thiếu
     base_url = "https://raw.githubusercontent.com/AlexOlsen/DeepWeeds/master/labels"
     for name in ["labels", "train_subset0", "val_subset0", "test_subset0"]:
         target = labels_dir / f"{name}.csv"
@@ -611,20 +614,36 @@ def ensure_dataset():
             import urllib.request
             urllib.request.urlretrieve(f"{base_url}/{name}.csv", str(target))
 
-    if not images_dir.exists() or len(list(images_dir.glob("*.jpg"))) < 1000:
-        images_dir.mkdir(parents=True, exist_ok=True)
-        zip_path = ROOT / "data" / "images.zip"
-        if not zip_path.exists():
-            print("Đang tải images.zip từ Zenodo (~490MB, mất khoảng 30-60 giây)...")
-            import urllib.request
-            url = "https://zenodo.org/records/7939060/files/images.zip?download=1"
-            urllib.request.urlretrieve(url, str(zip_path))
+    # 2. Nếu ảnh bị giải nén nằm trực tiếp ở data/*.jpg thay vì data/images/*.jpg
+    loose_images = list(data_dir.glob("*.jpg"))
+    if len(loose_images) > 0:
+        print(f"Phát hiện {len(loose_images)} ảnh nằm ở data/, đang chuyển vào data/images/...")
+        import shutil
+        for img_p in loose_images:
+            shutil.move(str(img_p), str(images_dir / img_p.name))
 
-        print("Đang giải nén images.zip...")
+    # 3. Nếu data/images vẫn chưa đủ ảnh, tải images.zip và giải nén thẳng vào data/images
+    if len(list(images_dir.glob("*.jpg"))) < 1000:
+        zip_path = data_dir / "images.zip"
+        if not zip_path.exists():
+            if (ROOT / "images.zip").exists():
+                zip_path = ROOT / "images.zip"
+            else:
+                print("Đang tải images.zip từ Zenodo (~490MB, mất khoảng 30-60 giây)...")
+                import urllib.request
+                url = "https://zenodo.org/records/7939060/files/images.zip?download=1"
+                urllib.request.urlretrieve(url, str(zip_path))
+
+        print("Đang giải nén images.zip vào data/images...")
         import zipfile
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(ROOT / "data")
-        print("Đã giải nén xong ảnh vào data/images!")
+            names = zip_ref.namelist()
+            if any(n.startswith("images/") for n in names):
+                zip_ref.extractall(data_dir)
+            else:
+                zip_ref.extractall(images_dir)
+        print("Đã giải nén xong toàn bộ ảnh vào data/images!")
+
 
 
 if __name__ == "__main__":
