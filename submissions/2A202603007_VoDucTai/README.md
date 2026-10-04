@@ -4,6 +4,8 @@
 **MSSV:** 2A202603007  
 **Lớp / Khóa:** Track 4 — Day 2: Deeplearning Advance  
 **Bài toán:** Phân loại cỏ dại nông nghiệp đa lớp trên bộ dữ liệu DeepWeeds (9 lớp, 17.509 ảnh)  
+**GitHub Repository:** [https://github.com/HydrogenDrinker/K4-DAY02-VoDucTai-2A202603007](https://github.com/HydrogenDrinker/K4-DAY02-VoDucTai-2A202603007)  
+**Notebook Colab:** [lab_day2.ipynb](https://colab.research.google.com/github/HydrogenDrinker/K4-DAY02-VoDucTai-2A202603007/blob/main/submissions/2A202603007_VoDucTai/code/lab_day2.ipynb)  
 
 ---
 
@@ -30,7 +32,7 @@
 ```text
 submissions/2A202603007_VoDucTai/
 ├── README.md               # Hướng dẫn cài đặt và chạy lại (file này)
-├── REPORT.md               # Báo cáo khoa học phân tích chuyên sâu
+├── report.md               # Báo cáo khoa học phân tích chuyên sâu
 ├── results.xlsx            # Bảng tổng hợp số liệu 7 sheets theo chuẩn GUIDE
 ├── curves/                 # Ảnh đồ thị training (loss/metric) của từng exp_id
 │   ├── B01_resnet50.png

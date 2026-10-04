@@ -5,6 +5,7 @@
 **Lớp / Khóa:** Track 4 — Day 2: Deeplearning Advance  
 **Mã nguồn thực nghiệm:** `submissions/2A202603007_VoDucTai/code/`  
 **Bảng số liệu tổng hợp:** `submissions/2A202603007_VoDucTai/results.xlsx`  
+**GitHub Repository:** [https://github.com/HydrogenDrinker/K4-DAY02-VoDucTai-2A202603007](https://github.com/HydrogenDrinker/K4-DAY02-VoDucTai-2A202603007)  
 
 ---
 
