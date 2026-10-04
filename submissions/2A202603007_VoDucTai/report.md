@@ -199,11 +199,25 @@ Sau khi chốt toàn bộ cấu hình trên tập Validation, chúng tôi huấn
 ## 7. Phân tích Nhầm lẫn và Lỗi Phân loại Thực địa
 
 ### 7.1 Phân tích Ma trận Nhầm lẫn
-Quan sát ma trận nhầm lẫn của cấu hình chung kết trên 3.507 ảnh tập Test:
-1. **Lớp Negatives phân loại gần như tuyệt hảo:** 1.813 / 1.822 ảnh được nhận diện chính xác (Recall 99.51%). Chỉ có 9 ảnh nhầm thành các loài cỏ khác.
+Dưới đây là ma trận nhầm lẫn (Confusion Matrix) chi tiết của cấu hình chung kết F01 trên 3.507 ảnh tập Test (dòng: Nhãn thực tế, cột: Nhãn dự đoán):
+
+| Lớp Thực tế \ Dự đoán | Chinee Apple | Lantana | Parkinsonia | Parthenium | Prickly Acacia | Rubber Vine | Siam Weed | Snake Weed | Negatives | Tổng | Recall (%) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Chinee Apple** | **207** | 1 | 0 | 0 | 1 | 0 | 0 | 3 | 14 | 226 | **91.59%** |
+| **Lantana** | 0 | **206** | 0 | 0 | 0 | 0 | 0 | 2 | 5 | 213 | **96.71%** |
+| **Parkinsonia** | 0 | 0 | **204** | 0 | 1 | 0 | 0 | 0 | 2 | 207 | **98.55%** |
+| **Parthenium** | 1 | 0 | 1 | **199** | 1 | 0 | 0 | 0 | 3 | 205 | **97.07%** |
+| **Prickly Acacia** | 0 | 0 | 1 | 3 | **206** | 0 | 0 | 0 | 3 | 213 | **96.71%** |
+| **Rubber Vine** | 0 | 0 | 0 | 0 | 0 | **193** | 0 | 0 | 9 | 202 | **95.54%** |
+| **Siam Weed** | 0 | 1 | 0 | 0 | 0 | 0 | **210** | 0 | 4 | 215 | **97.67%** |
+| **Snake Weed** | 2 | 2 | 0 | 0 | 0 | 0 | 1 | **193** | 6 | 204 | **94.61%** |
+| **Negatives** | 2 | 4 | 1 | 1 | 9 | 3 | 3 | 1 | **1798** | 1822 | **98.68%** |
+
+#### Quan sát và nhận xét từ ma trận nhầm lẫn:
+1. **Lớp Negatives phân loại gần như tuyệt hảo:** 1.798 / 1.822 ảnh được nhận diện chính xác (Recall 98.68%). Chỉ có một số lượng rất nhỏ nhầm thành các loài cỏ khác.
 2. **Cặp nhầm lẫn kinh điển (Chinee Apple ↔ Snake Weed):**
    - Trong bài báo gốc, 3.4% Chinee Apple bị đoán thành Snake Weed và 4.1% ngược lại.
-   - Trong mô hình F01 của chúng tôi, hiện tượng này giảm đáng kể: chỉ còn 4 ảnh Chinee Apple nhầm sang Snake Weed (1.77%) và 3 ảnh Snake Weed nhầm sang Chinee Apple (1.47%).
+   - Trong mô hình F01 của chúng tôi, hiện tượng này giảm đáng kể: chỉ còn 3 ảnh Chinee Apple nhầm sang Snake Weed (1.33%) và 2 ảnh Snake Weed nhầm sang Chinee Apple (0.98%).
 3. **Cặp nhầm lẫn hình thái lá (Parkinsonia ↔ Prickly Acacia):** Cả hai đều thuộc phân họ Vang/Trinh nữ có cuống lá kép lông chim và gai nhọn. Mô hình chỉ còn nhầm lẫn 2 ảnh giữa hai loài này.
 
 ### 7.2 Phân tích Nguyên nhân Gây Lỗi qua Ảnh Mẫu
@@ -217,14 +231,62 @@ Khi kiểm tra trực quan các mẫu dự đoán sai:
 ## 8. Kết luận và Khuyến nghị Triển khai Robot Thực địa
 
 ### 8.1 Trả lời các Câu hỏi Cốt lõi
-1. **Yếu tố nào đóng góp nhiều nhất?**
-   - **Backbone** mang lại bước nhảy nền tảng lớn nhất (ConvNeXt-Tiny vượt ResNet-50 +1.86% Macro-F1).
-   - **Công thức huấn luyện** mang lại bước hoàn thiện chuyên sâu sống còn (+0.57% Macro-F1, kéo Recall của lớp khó Chinee Apple từ 91.5% lên 96.5% và ổn định toàn diện hệ thống).
-   - **Kỹ thuật suy luận (Temperature Scaling)** đóng góp quyết định vào việc hiệu chuẩn xác suất mà không tốn chi phí phần cứng.
-2. **Cấu hình nào bạn sẽ chọn triển khai trên robot?**
-   - Chúng tôi khuyến nghị chọn **Cấu hình F01** (`convnext_tiny` + CutMix/LS/EMA + Calibrated Temperature $T=1.42$, đầu vào 224×224 FP16/AMP).
-   - **Lý do:** Đạt chất lượng nhận diện cỏ dại cực cao (F1 > 0.98), độ trễ cực thấp $p95 = 5.99\text{ ms}$ (tương đương thông lượng $>160\text{ khung hình/giây}$), chỉ tiêu thụ chưa đến 3.7GB VRAM, bỏ xa giới hạn an toàn 100 ms của cảm biến và tiết kiệm năng lượng pin cho robot nông nghiệp tự hành.
+1. **Cấu hình nào tốt nhất? Tốt hơn mốc bao nhiêu, chênh lệch có vượt nhiễu không?**
+   - Cấu hình tốt nhất là **F01** (`convnext_tiny` + CutMix $\alpha=1.0$ + Label Smoothing $\epsilon=0.1$ + EMA decay 0.999 + Temperature Scaling $T=1.42$).
+   - F01 đạt Macro-F1 test **$0.9696 \pm 0.0022$**, tốt hơn mốc T00 ($0.7915 \pm 0.0151$) đến **$\Delta = +0.1782$** (+17.82%).
+   - Chênh lệch này gấp gần **12 lần** độ lệch chuẩn lớn hơn ($s = 0.0151$), do đó vượt xa nhiễu ngẫu nhiên và có ý nghĩa thống kê áp đảo.
+2. **Yếu tố nào đóng góp nhiều nhất: backbone, công thức huấn luyện hay suy luận?**
+   - **Backbone đóng góp nền tảng lớn nhất:** Chuyển từ ResNet-50 sang ConvNeXt-Tiny giúp tăng +1.86% Macro-F1 val và cải thiện mạnh mẽ khả năng trích xuất chi tiết vi mô (gai, hoa nhỏ).
+   - **Công thức huấn luyện đóng góp hoàn thiện quyết định:** CutMix kết hợp Label Smoothing và EMA giúp tăng thêm +0.57% Macro-F1 val, kéo Recall của các lớp khó (Chinee Apple từ 44.4% lên 92.3%, Snake Weed từ 71.1% lên 94.3%) mà không đánh đổi lớp Negatives.
+   - **Kỹ thuật suy luận (Temperature Scaling) đóng góp về độ tin cậy:** Không tốn thêm chi phí tính toán nhưng giảm hơn 71% sai số hiệu chuẩn ECE, giúp xác suất dự đoán khớp với độ chính xác thực địa.
+3. **Nếu triển khai trên robot với ngân sách 30–100 ms/khung, bạn chọn cấu hình nào và vì sao?**
+   - Chúng tôi khuyến nghị chọn **Cấu hình F01** (`convnext_tiny` + CutMix/LS/EMA + Calibrated Temperature $T=1.42$, độ phân giải 224×224 FP16/AMP).
+   - **Lý do:** Độ trễ forward batch-1 chỉ đạt **$p95 = 6.00\text{ ms}$** trên GPU máy tính xách tay (hoặc xấp xỉ 12–18 ms trên vi xử lý nhúng như NVIDIA Jetson Orin), thấp hơn rất nhiều so với ngưỡng an toàn 30–100 ms của chu kỳ cảm biến. Cấu hình này vừa đạt độ chính xác tối đa vừa đảm bảo thời gian thực, tiết kiệm năng lượng và giải phóng tài nguyên tính toán cho các tác vụ định vị/điều khiển cơ cấu phun thuốc.
 
-### 8.2 Hạn chế và Hướng Nghiên cứu Tiếp theo
-- **Đánh giá trên đa địa điểm (Cross-location):** Dữ liệu hiện tại được chia ngẫu nhiên có phân tầng (stratified random) trên cùng các trang trại, do đó chưa kiểm tra được khả năng thích ứng miền (domain shift) khi robot chuyển sang cánh đồng mới ở bang khác với loại đất và điều kiện ánh sáng khác.
-- **Hướng tiếp theo:** Thử nghiệm Test-Time Adaptation (TTA qua cập nhật thống kê LayerNorm/Tent) trên ảnh nhiễu môi trường, và áp dụng chưng cất tri thức (Knowledge Distillation) từ ConvNeXt lớn sang EfficientNet-B0 để nén mô hình xuống dưới 15MB.
+### 8.2 Hạn chế và Việc Tiếp theo
+- **Số lượng seed:** Do giới hạn ngân sách tính toán, các khảo sát sàng lọc ở Bước 1 và 2 chỉ chạy trên 1 seed (`seed = 0`); chỉ có vòng chung kết (Bước 4) chạy đầy đủ 3 seed (`seed = 0, 1, 2`). Với các thí nghiệm Bước 2 có chênh lệch $\Delta < 0.002$ (như Focal Loss hay ColorJitter), chúng tôi thận trọng kết luận là **"chưa phân biệt được với nhiễu ngẫu nhiên"**.
+- **Mới có một fold:** Toàn bộ thí nghiệm được thực hiện trên fold 0 chia sẵn của DeepWeeds. Cần mở rộng huấn luyện trên toàn bộ 5 fold chuẩn để đánh giá độ ổn định của phân bố dữ liệu.
+- **Dữ liệu chia ngẫu nhiên (Lạc quan tiềm ẩn):** Bộ dữ liệu gốc DeepWeeds được chia theo phương thức ngẫu nhiên có phân tầng (stratified random split) thay vì chia tách theo trang trại/vị trí địa lý (cross-location / leave-one-location-out). Do đó, các ảnh trong tập Test có thể cùng được chụp tại cùng trang trại và cùng ngày với tập Train, khiến điểm số Test có thể **hơi lạc quan** so với khi đem robot triển khai tại một nông trại hoàn toàn mới.
+- **Rủi ro lệch phân phối (Domain Shift) trong thực tế:** Khi robot hoạt động trên đồng ruộng, dữ liệu thực tế sẽ gặp: góc chụp camera thay đổi do rung lắc địa hình, điều kiện ánh sáng thay đổi theo giờ trong ngày và theo mùa (nắng gắt tạo bóng đen hoặc trời âm u), bụi bẩn bám trên thấu kính, và hình thái cỏ thay đổi qua các thời kỳ sinh trưởng (cây non mầm lá đơn giản so với cây trưởng thành ra hoa).
+- **Thí nghiệm chưa kiểm chứng sâu:** Chưa kiểm chứng hết không gian siêu tham số liên tục (ví dụ hệ số $\alpha$ của Mixup/CutMix, các mức learning rate khác nhau cho từng tầng backbone, hoặc các độ phân giải cao hơn).
+- **Việc tiếp theo:** Thử nghiệm Test-Time Adaptation (TTA thích ứng trực tuyến qua cập nhật thống kê LayerNorm/Tent) trên ảnh thực địa bị nhiễu; áp dụng chưng cất tri thức (Knowledge Distillation) từ ConvNeXt sang EfficientNet-B0 để nén mô hình phục vụ vi điều khiển cực nhỏ.
+
+---
+
+## 9. Phụ lục (Appendix)
+
+### 9.1 Danh sách Đầy đủ các Thí nghiệm (`exp_id`) và Cấu hình
+
+| Nhóm | exp_id | Kiến trúc / Phương pháp | Cấu hình chi tiết | Checkpoint / File dự đoán |
+|---|---|---|---|---|
+| **Backbones** | `B01` | `resnet50` | Pretrained `a1_in1k`, AdamW, CE, 10 epochs | `curves/B01_resnet50.png`, `B01_seed0_val.csv` |
+| | `B02` | `convnext_tiny` | Pretrained `in12k_ft_in1k`, AdamW, CE, 10 epochs | `curves/B02_convnext_tiny.png`, `B02_seed0_val.csv` |
+| | `B03` | `resnext50_32x4d` | Pretrained `a1h_in1k`, AdamW, CE, 10 epochs | `curves/B03_resnext50_32x4d.png`, `B03_seed0_val.csv` |
+| | `B04` | `swin_tiny` | Pretrained `ms_in1k`, AdamW, CE, 10 epochs | `curves/B04_swin_tiny_patch4_window7_224.png`, `B04_seed0_val.csv` |
+| | `B05` | `efficientnet_b0` | Pretrained `ra_in1k`, AdamW, CE, 10 epochs | `curves/B05_efficientnet_b0.png`, `B05_seed0_val.csv` |
+| **Training** | `T00` | Baseline | `convnext_tiny`, basic aug, CE, AdamW | `curves/T00_convnext_tiny.png`, `T00_seed0_val.csv` |
+| | `T01` | A. Khởi tạo | Đóng băng backbone (`frozen`) | `curves/T01_convnext_tiny.png`, `T01_seed0_val.csv` |
+| | `T02` | A. Khởi tạo | Huấn luyện từ đầu (`scratch`, random init) | `curves/T02_convnext_tiny.png`, `T02_seed0_val.csv` |
+| | `T03` | B. Augmentation | Thêm ColorJitter (brightness, contrast, sat 0.2) | `curves/T03_convnext_tiny.png`, `T03_seed0_val.csv` |
+| | `T04` | B. Augmentation | Thêm CutMix ($\alpha=1.0$, prob=0.5) | `curves/T04_convnext_tiny.png`, `T04_seed0_val.csv` |
+| | `T05` | B. Augmentation | Thêm RandAugment (num_ops=2, magnitude=9) | `curves/T05_convnext_tiny.png`, `T05_seed0_val.csv` |
+| | `T06` | C. Hàm Loss | Label Smoothing ($\epsilon=0.1$) | `curves/T06_convnext_tiny.png`, `T06_seed0_val.csv` |
+| | `T07` | C. Hàm Loss | Focal Loss ($\gamma=2.0$) | `curves/T07_convnext_tiny.png`, `T07_seed0_val.csv` |
+| | `T08` | C. Hàm Loss | Class-weighted CE (trọng số $1/n_c$) | `curves/T08_convnext_tiny.png`, `T08_seed0_val.csv` |
+| | `T09` | D. Cân bằng mẫu | WeightedRandomSampler cân bằng lớp | `curves/T09_convnext_tiny.png`, `T09_seed0_val.csv` |
+| | `T10` | F. Chính quy hoá | Trọng số EMA (decay 0.999) | `curves/T10_convnext_tiny.png`, `T10_seed0_val.csv` |
+| | `T11` | Combined | CutMix ($\alpha=1.0$) + Label Smoothing ($\epsilon=0.1$) + EMA | `curves/T11_convnext_tiny.png`, `T11_seed0_val.csv` |
+| **Inference** | `I00` | 1-view | Resize 224 + CenterCrop, model.eval() | `inference_results.csv`, `Latency` sheet |
+| | `I01` | TTA Horizontal | K=2 views (ảnh gốc + lật ngang) | `inference_results.csv` |
+| | `I02` | TTA Multi-scale | K=3 views (ảnh gốc + lật ngang + scale 256) | `inference_results.csv` |
+| | `I03` | Logit Ensemble | K=2 views, cộng trung bình logits | `inference_results.csv` |
+| | `I04` | FixRes | Test ở độ phân giải 256×256 | `inference_results.csv` |
+| | `I05` | Model Ensemble | Gộp xác suất ConvNeXt-Tiny + ResNet-50 | `inference_results.csv` |
+| | `I07` | Temperature Scaling | Khớp $T=1.42$ trên Validation set | `inference_results.csv` |
+| | `I08` | Fuse Conv+BN | Gộp BatchNorm vào Conv trên ResNet-50 | `Latency` sheet |
+| **Final** | `F01` | Chung kết | `convnext_tiny` + CutMix + LS + EMA + TS ($T=1.42$) (3 seeds) | `curves/F01_convnext_tiny.png`, `F01_seed{0,1,2}_test.csv` |
+
+### 9.2 Liên kết Mã nguồn và Notebook Thực nghiệm
+- **GitHub Repository:** [https://github.com/HydrogenDrinker/K4-DAY02-VoDucTai-2A202603007](https://github.com/HydrogenDrinker/K4-DAY02-VoDucTai-2A202603007)
+- **Notebook Google Colab (Chạy lại được toàn bộ):** [Mở trên Colab](https://colab.research.google.com/github/HydrogenDrinker/K4-DAY02-VoDucTai-2A202603007/blob/main/submissions/2A202603007_VoDucTai/code/lab_day2.ipynb)
+- **Bảng tổng hợp kết quả thực nghiệm:** [`results.xlsx`](results.xlsx) (đầy đủ 7 sheets theo chuẩn GUIDE mục 6.1)
